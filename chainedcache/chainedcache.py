@@ -42,7 +42,7 @@ class BaseCache:
         it and puts the result in the cache.
         '''
         data = self.get(key)
-        if not data:
+        if data is None:
             data = generator(key)
             self.put(key, data)
         return data
