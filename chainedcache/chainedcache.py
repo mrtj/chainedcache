@@ -7,13 +7,13 @@ except ImportError:
     HAS_BOTO3 = False
 
 class BaseCache:
+    ''' Base class for cache implementations. 
+    
+    Params:
+        verbose (bool): Print cache related messages.
+    '''
     
     def __init__(self, verbose=True):
-        ''' Base class for cache instances. 
-        
-        Params:
-            verbose (bool): Print cache related messages.
-        '''
         self.verbose = verbose
         
     def message(self, msg):
@@ -50,9 +50,9 @@ class BaseCache:
 
 
 class DictCache(BaseCache):
+    ''' Simple dicitionary based in-memory cache. '''
     
     def __init__(self, **kwargs):
-        ''' Simple dicitionary based in-memory cache. '''
         super().__init__(**kwargs)
         self.cache = {}
         
@@ -75,19 +75,18 @@ class DictCache(BaseCache):
 
 
 class FileCache(BaseCache):
+    ''' Simple file based cache.
+    
+    Params:
+        path (str): The cache folder path
+        mode (str): The file write mode. 'text' and 'bytes' are supported.
+        put_transformer (callable): Transform the data before being written to the file. Must return
+            a bytes or text stream as specified by mode parameter.
+        get_transformer (callable): Transform the data after being read from the file. Must accept
+            a bytes or text stream as specified by mode parameter.
+    '''
     
     def __init__(self, path, mode='text', put_transformer=None, get_transformer=None, **kwargs):
-        '''
-        Simple file based cache.
-        
-        Params:
-            path (str): The cache folder path
-            mode (str): The file write mode. 'text' and 'bytes' are supported.
-            put_transformer (callable): Transform the data before being written to the file. Must return
-                a bytes or text stream as specified by mode parameter.
-            get_transformer (callable): Transform the data after being read from the file. Must accept
-                a bytes or text stream as specified by mode parameter.
-        '''
         super().__init__(**kwargs)
         self.path = path
         if not mode in ['text', 'bytes']:
@@ -133,22 +132,22 @@ class FileCache(BaseCache):
 
 
 class S3Cache(BaseCache):
+    '''
+    A cache based on Amazon S3 service.
+    
+    You must install boto3 to be able to use this class.
+    
+    Params:
+        bucket (str): The S3 bucket name
+        prefix (str): The S3 key prefix
+        put_transformer (callable): Transform the data before being written 
+            to the file. Must return a bytes array or bytes output stream.
+        get_transformer (callable): Transform the data after being read 
+            from the file. Must accept a bytes input stream.
+    '''
     
     def __init__(self, bucket, prefix, region='eu-west-1', 
                  put_transformer=None, get_transformer=None, **kwargs):
-        '''
-        A cache based on Amazon S3 service.
-        
-        You must install boto3 to be able to use this class.
-        
-        Params:
-            bucket (str): The S3 bucket name
-            prefix (str): The S3 key prefix
-            put_transformer (callable): Transform the data before being written 
-                to the file. Must return a bytes array or bytes output stream.
-            get_transformer (callable): Transform the data after being read 
-                from the file. Must accept a bytes input stream.
-        '''
         if not HAS_BOTO3:
             raise ImportError('Please install boto3 in order to use S3Cache!')
         super().__init__(**kwargs)
@@ -190,26 +189,26 @@ class S3Cache(BaseCache):
 
     
 class ChainedCache(BaseCache):
+    ''' A chained cache.
+    
+    You can initialize a ChainedCache with a list of other BaseCache 
+    instances. When an object is requested, ChainedCache searches the 
+    object in the cache instances one at a time and returns as soon as
+    it is found. It also saves the object in the downstream cache instances.
+    
+    For example you can construct the following cache chain:
+
+        dict_cache = DictCache()
+        file_cache = FileCache(...)
+        s3_cache = S3Cache(...)
+        cache = ChainedCache([dict_cache, file_cache, s3_cache])
+
+    This cache will first search the requested object in the in-memory
+    dictionary, if it is not found than in the local file system, and
+    if it is still not found, in the S3 bucket.
+    '''
     
     def __init__(self, caches):
-        ''' A chained cache.
-        
-        You can initialize a ChainedCache with a list of other BaseCache 
-        instances. When an object is requested, ChainedCache searches the 
-        object in the cache instances one at a time and returns as soon as
-        it is found. It also saves the object in the downstream cache instances.
-        
-        For example you can construct the following cache chain:
-
-            dict_cache = DictCache()
-            file_cache = FileCache(...)
-            s3_cache = S3Cache(...)
-            cache = ChainedCache([dict_cache, file_cache, s3_cache])
-
-        This cache will first search the requested object in the in-memory
-        dictionary, if it is not found than in the local file system, and
-        if it is still not found, in the S3 bucket.
-        '''
         self.caches = caches
         
     def get(self, key):
