@@ -3,6 +3,9 @@ Simple python cache system.
 
 Example usage:
 
+    import json
+    from chainedcache import DictCache, FileCache, S3Cache, ChainedCache
+
     json2bytes = lambda d: json.dumps(d).encode('UTF-8')
     bytes2json = lambda d: json.loads(d.decode('UTF-8'))
     stream2json = lambda d: json.load(d)

@@ -11,6 +11,9 @@ $ python -m pip install git+https://github.com/mrtj/chainedcache
 ## Usage
 
 ```python
+import json
+from chainedcache import DictCache, FileCache, S3Cache, ChainedCache
+
 json2bytes = lambda d: json.dumps(d).encode('UTF-8')
 bytes2json = lambda d: json.loads(d.decode('UTF-8'))
 stream2json = lambda d: json.load(d)
