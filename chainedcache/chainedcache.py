@@ -43,7 +43,7 @@ class BaseCache:
         '''
         data = self.get(key)
         if not data:
-            data = generator()
+            data = generator(key)
             self.put(key, data)
         return data
 
